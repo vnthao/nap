@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Cụ Nạp ESP32-S3</title>
+    <title>Công Cụ Nạp ESP32-S3 - Phiên bản Tích hợp Repo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
     <style>
@@ -27,6 +27,8 @@
         .btn-primary:hover { background-color: #00a8d6; }
         .btn-secondary { background-color: #6c757d; color: white; }
         .btn-secondary:hover { background-color: #5a6268; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-success:hover { background-color: #218838; }
         #installButton { --esp-tools-button-color: var(--primary); --esp-tools-border-radius: 8px; width: 100%; margin-top: 15px; }
         .status-log { background-color: #1a1a1a; color: #e0e0e0; padding: 15px; border-radius: 5px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; height: 250px; overflow-y: auto; margin-top: 20px; white-space: pre-wrap; }
         .log-entry { margin-bottom: 5px; line-height: 1.4; }
@@ -39,20 +41,23 @@
         .hidden { display: none; }
         .url-hint { font-size: 0.8rem; color: #6c757d; margin-top: 5px; }
         #githubUrl { font-family: monospace; }
+        .button-group { display: flex; gap: 10px; margin-top: 10px; }
+        .button-group .btn { flex: 1; }
+        .default-firmware-info { background-color: #e7f3ff; border-left: 4px solid var(--primary); padding: 10px; margin-top: 10px; border-radius: 0 4px 4px 0; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-microchip"></i> Công Cụ Nạp ESP32-S3</h1>
-            <p class="subtitle">Nạp firmware trực tiếp từ trình duyệt hoặc từ liên kết trực tuyến</p>
+            <h1><i class="fas fa-microchip"></i> ESP32-S3 Web Flasher</h1>
+            <p class="subtitle">Nạp từ file máy tính hoặc firmware mặc định của dự án</p>
         </header>
         <div class="main-content">
             <!-- Phần 1: NẠP TỪ FILE TRÊN MÁY -->
             <div class="section">
                 <h2><i class="fas fa-upload"></i> 1. Nạp từ file trên máy</h2>
                 <div class="method-card">
-                    <p>Chọn file firmware <code>.bin</code> từ máy tính của bạn.</p>
+                    <p>Chọn file firmware <code>.bin</code> từ máy tính của bạn nếu bạn có phiên bản tùy chỉnh.</p>
                     <div class="input-group">
                         <input type="file" id="localFile" accept=".bin" style="display: none;">
                         <button onclick="document.getElementById('localFile').click()" class="btn btn-secondary">
@@ -63,28 +68,32 @@
                 </div>
             </div>
 
-            <!-- Phần 2: NẠP TỪ LINK GITHUB (TÍNH NĂNG MỚI) -->
+            <!-- Phần 2: NẠP FIRMWARE MẶC ĐỊNH (Từ chính repo này) -->
             <div class="section">
-                <h2><i class="fab fa-github"></i> 2. Nạp từ liên kết GitHub (Online)</h2>
+                <h2><i class="fas fa-cloud-download-alt"></i> 2. Nạp firmware mặc định của dự án</h2>
                 <div class="method-card">
-                    <p>Dán URL trực tiếp đến file <code>.bin</code> trên GitHub (hoặc bất kỳ máy chủ nào).</p>
-                    <div class="input-group">
-                        <label for="githubUrl">URL file firmware:</label>
-                        <input type="url" id="githubUrl" placeholder="https://github.com/user/repo/raw/main/firmware.bin">
-                        <p class="url-hint">📝 <strong>Mẹo:</strong> Trên GitHub, nhấn vào file .bin, chọn "Raw", sau đó sao chép URL từ thanh địa chỉ.</p>
+                    <p>Nhấn nút bên dưới để sử dụng phiên bản firmware chính thức mới nhất được lưu trữ ngay trong kho này.</p>
+                    <div class="default-firmware-info">
+                        <strong><i class="fas fa-info-circle"></i> Thông tin phiên bản hiện tại:</strong>
+                        <div id="firmwareVersionInfo">Đang kiểm tra...</div>
                     </div>
-                    <button onclick="loadFromGitHub()" class="btn btn-primary">
-                        <i class="fas fa-download"></i> Tải & Thiết lập firmware từ URL này
-                    </button>
+                    <div class="button-group">
+                        <!-- NÚT QUAN TRỌNG: Sẽ dùng URL được cấu hình sẵn -->
+                        <button onclick="loadDefaultFirmware()" class="btn btn-success" id="defaultFirmwareBtn">
+                            <i class="fas fa-bolt"></i> Sử dụng firmware mặc định
+                        </button>
+                    </div>
+                    <p class="url-hint" style="margin-top: 10px;">
+                        <i class="fas fa-shield-alt"></i> <strong>Cơ chế ẩn (Hidden URL):</strong> Link firmware được cấu hình sẵn trong code. Khi bạn upload file <code>firmware.bin</code> mới lên thư mục <code>/firmware</code> của repo, mọi người dùng sẽ tự động nạp được bản mới.
+                    </p>
                 </div>
             </div>
 
-            <!-- Phần 3: NÚT BẮT ĐẦU NẠP -->
+            <!-- Phần 3: BẮT ĐẦU NẠP VÀO THIẾT BỊ -->
             <div class="section">
                 <h2><i class="fas fa-play-circle"></i> 3. Bắt đầu nạp vào thiết bị</h2>
                 <div class="method-card">
                     <p>Sau khi chọn firmware ở trên, nhấn nút bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
-                    <!-- Nút chính của esp-web-tools -->
                     <esp-web-install-button id="installButton">
                         <span slot="activate"><i class="fas fa-plug"></i> Kết nối ESP32-S3 & Bắt đầu nạp</span>
                         <span slot="unsupported">Trình duyệt không hỗ trợ. Vui lòng dùng Chrome/Edge.</span>
@@ -97,8 +106,7 @@
             <div class="section">
                 <h2><i class="fas fa-terminal"></i> Nhật ký hệ thống</h2>
                 <div class="status-log" id="statusLog">
-                    <!-- Log sẽ được thêm vào đây bởi JavaScript -->
-                    <div class="log-entry log-info">[Hệ thống] Công cụ đã sẵn sàng. Chọn firmware và bắt đầu.</div>
+                    <div class="log-entry log-info">[Hệ thống] Công cụ đã sẵn sàng. Vui lòng chọn nguồn firmware.</div>
                 </div>
                 <div style="text-align: right; margin-top:10px;">
                     <button onclick="clearLog()" class="btn btn-secondary btn-sm"><i class="fas fa-trash"></i> Xóa log</button>
@@ -106,27 +114,28 @@
             </div>
         </div>
         <footer>
-            <p>ESP Web Flasher | Dựa trên ESP Web Tools của Espressif | Phiên bản: Chuyên dụng</p>
+            <p>ESP Web Flasher | Phiên bản tích hợp Repository | Dựa trên ESP Web Tools</p>
         </footer>
     </div>
 
     <script>
-        // ========== BIẾN TOÀN CỤC & HÀM LOG ==========
+        // ========== CẤU HÌNH ẨN QUAN TRỌNG ==========
+        // 🔧 THAY ĐỔI URL DƯỚI ĐÂY BẰNG "RAW URL" CỦA BẠN!
+        const DEFAULT_FIRMWARE_RAW_URL = 'YOUR_RAW_FIRMWARE_URL_HERE'; // Ví dụ: 'https://raw.githubusercontent.com/username/esp-flasher-repo/main/firmware/firmware.bin'
+
+        // ========== BIẾN TOÀN CỤC ==========
         let currentManifestObject = null;
 
+        // ========== HÀM LOG ==========
         function addLog(message, type = 'info') {
             const logContainer = document.getElementById('statusLog');
             const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry';
-
-            // Map loại log sang class CSS
             const typeClassMap = { 'info': 'log-info', 'success': 'log-success', 'error': 'log-error', 'warning': 'log-warning' };
             logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClassMap[type] || 'log-info'}">${message}</span>`;
             logContainer.appendChild(logEntry);
-            // Tự động cuộn xuống dòng mới nhất
             logContainer.scrollTop = logContainer.scrollHeight;
-            // In ra console để debug
             console.log(`[${type.toUpperCase()}] ${message}`);
         }
 
@@ -136,13 +145,13 @@
         }
 
         // ========== PHẦN 1: XỬ LÝ FILE LOCAL ==========
-        document.getElementById('localFile').addEventListener('change', function(e) {
+        document.getElementById('localFile').addEventListener('change', async function(e) {
             if (!e.target.files.length) return;
             const file = e.target.files[0];
             const fileNameEl = document.getElementById('localFileName');
 
             if (!file.name.toLowerCase().endsWith('.bin')) {
-                addLog(`Lỗi: File "${file.name}" không phải là file .bin hợp lệ.`, 'error');
+                addLog(`❌ File "${file.name}" không phải file .bin hợp lệ.`, 'error');
                 fileNameEl.textContent = 'File không hợp lệ!';
                 fileNameEl.style.color = 'var(--danger)';
                 return;
@@ -150,11 +159,9 @@
 
             fileNameEl.textContent = `📄 ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
             fileNameEl.style.color = 'var(--success)';
-            addLog(`Đã chọn file local: "${file.name}"`, 'success');
+            addLog(`Đã chọn file: "${file.name}"`, 'success');
 
-            // Tạo Object URL cho file (an toàn với trình duyệt)
             const fileObjectUrl = URL.createObjectURL(file);
-            // Tạo manifest JSON cho file này
             const manifest = {
                 name: `Local: ${file.name}`,
                 version: "1.0.0",
@@ -163,135 +170,120 @@
             const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
             const manifestUrl = URL.createObjectURL(manifestBlob);
 
-            // Cập nhật nút cài đặt
             updateInstallButton(manifestUrl);
-            // Lưu đối tượng để dọn dẹp sau
             currentManifestObject = { manifestUrl, fileObjectUrl };
-            addLog('Firmware đã sẵn sàng. Bấm "Kết nối..." để nạp.', 'info');
+            addLog('✅ Firmware đã sẵn sàng. Bấm "Kết nối..." để nạp.', 'info');
         });
 
-        // ========== PHẦN 2: XỬ LÝ URL GITHUB (TÍNH NĂNG CHÍNH) ==========
-        async function loadFromGitHub() {
-            const urlInput = document.getElementById('githubUrl').value.trim();
-            const fileNameEl = document.getElementById('localFileName');
+        // ========== PHẦN 2: FIRMWARE MẶC ĐỊNH TỪ REPO ==========
+        async function loadDefaultFirmware() {
+            const btn = document.getElementById('defaultFirmwareBtn');
+            const infoDiv = document.getElementById('firmwareVersionInfo');
 
-            if (!urlInput) {
-                addLog('Lỗi: Vui lòng nhập URL file firmware.', 'error');
-                alert('Vui lòng dán URL file .bin vào ô bên trên.');
+            if (!DEFAULT_FIRMWARE_RAW_URL || DEFAULT_FIRMWARE_RAW_URL === 'YOUR_RAW_FIRMWARE_URL_HERE') {
+                addLog('❌ Chưa cấu hình URL firmware mặc định.', 'error');
+                infoDiv.innerHTML = `<span style="color:var(--danger);">Chưa cấu hình URL. Vui lòng chỉnh sửa file index.html.</span>`;
+                alert('Lỗi: Chưa cấu hình URL firmware mặc định.\n\nVui lòng thay thế biến DEFAULT_FIRMWARE_RAW_URL trong code bằng Raw URL của bạn.');
                 return;
             }
 
-            // Kiểm tra URL hợp lệ cơ bản
-            try {
-                new URL(urlInput);
-            } catch {
-                addLog(`Lỗi: URL không hợp lệ: "${urlInput}"`, 'error');
-                alert('URL không đúng định dạng. Vui lòng kiểm tra lại.');
-                return;
-            }
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra...';
+            btn.disabled = true;
+            infoDiv.innerHTML = `Đang kiểm tra...`;
 
-            addLog(`Đang tải firmware từ: ${urlInput}`, 'info');
-            fileNameEl.textContent = `⏳ Đang tải từ URL...`;
-            fileNameEl.style.color = 'orange';
+            addLog(`🔍 Đang kiểm tra firmware mặc định tại: ${DEFAULT_FIRMWARE_RAW_URL}`, 'info');
 
             try {
-                // Thử tải file để kiểm tra
-                const testResponse = await fetch(urlInput, { method: 'HEAD' });
-                if (!testResponse.ok) {
-                    throw new Error(`Không thể truy cập file (HTTP ${testResponse.status}). Kiểm tra lại URL hoặc quyền truy cập.`);
-                }
+                // Thử tải header để kiểm tra file có tồn tại không
+                const testResponse = await fetch(DEFAULT_FIRMWARE_RAW_URL, { method: 'HEAD' });
+                if (!testResponse.ok) throw new Error(`HTTP ${testResponse.status}`);
 
-                // Tạo manifest trỏ TRỰC TIẾP đến URL từ GitHub
+                const fileSize = testResponse.headers.get('content-length');
+                const sizeText = fileSize ? ` (${(fileSize / (1024*1024)).toFixed(2)} MB)` : '';
+
+                // Tạo manifest trỏ TRỰC TIẾP đến URL Raw
                 const manifest = {
-                    name: `Online Firmware`,
-                    version: "1.0.0",
+                    name: `Firmware chính thức`,
+                    version: "1.0",
                     builds: [{
                         chipFamily: "ESP32-S3",
-                        parts: [{ path: urlInput, offset: 0x00000 }] // Đường dẫn trực tiếp
+                        parts: [{ path: DEFAULT_FIRMWARE_RAW_URL, offset: 0x00000 }]
                     }]
                 };
 
-                // Tạo manifest dưới dạng Blob URL
                 const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
                 const manifestUrl = URL.createObjectURL(manifestBlob);
 
-                // Cập nhật nút cài đặt
                 updateInstallButton(manifestUrl);
-                // Lưu đối tượng để dọn dẹp
                 currentManifestObject = { manifestUrl };
 
-                fileNameEl.textContent = `🌐 Firmware Online [Đã sẵn sàng]`;
-                fileNameEl.style.color = 'var(--success)';
-                addLog(`✅ Đã thiết lập firmware từ URL thành công!`, 'success');
-                addLog('Bấm "Kết nối..." để bắt đầu nạp. File sẽ được tải trực tiếp từ liên kết.', 'info');
+                // Cập nhật giao diện thông tin
+                infoDiv.innerHTML = `
+                    <span style="color:var(--success);">
+                        <i class="fas fa-check-circle"></i> Phiên bản mới nhất đã sẵn sàng.
+                    </span><br>
+                    <small>URL: ${new URL(DEFAULT_FIRMWARE_RAW_URL).pathname.split('/').pop()} ${sizeText}</small>
+                `;
+                document.getElementById('localFileName').textContent = ''; // Xóa tên file local nếu có
+
+                addLog(`✅ Đã thiết lập firmware mặc định thành công!`, 'success');
+                addLog('👉 Bấm "Kết nối..." để bắt đầu nạp.', 'info');
 
             } catch (error) {
-                addLog(`❌ Lỗi khi tải từ URL: ${error.message}`, 'error');
-                fileNameEl.textContent = '❌ Tải thất bại!';
-                fileNameEl.style.color = 'var(--danger)';
-                alert(`Không thể tải file từ URL:\n${error.message}\n\nHãy kiểm tra:\n1. URL có đúng không?\n2. File có công khai không? (GitHub: dùng Raw URL)\n3. Có vấn đề mạng không?`);
+                addLog(`❌ Không thể tải firmware mặc định: ${error.message}`, 'error');
+                infoDiv.innerHTML = `<span style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Không thể tải file. Kiểm tra URL hoặc kết nối mạng.</span>`;
+                alert(`Không thể kết nối đến file firmware mặc định.\n\nLỗi: ${error.message}\n\nHãy đảm bảo:\n1. URL '${DEFAULT_FIRMWARE_RAW_URL}' là đúng.\n2. File đã được upload và công khai trên GitHub.\n3. Bạn đang sử dụng "Raw URL".`);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Sử dụng firmware mặc định';
+                btn.disabled = false;
             }
         }
 
-        // ========== HÀM CẬP NHẬT NÚT CÀI ĐẶT & THEO DÕI TRẠNG THÁI ==========
+        // ========== CẬP NHẬT NÚT CÀI ĐẶT & THEO DÕI LOG THỰC TẾ ==========
         const installButton = document.getElementById('installButton');
 
         function updateInstallButton(manifestUrl) {
-            // Xóa manifest cũ và thiết lập cái mới
-            if (installButton.hasAttribute('manifest')) {
-                installButton.removeAttribute('manifest');
-            }
-            // Dùng setTimeout nhỏ để đảm bảo DOM cập nhật
+            if (installButton.hasAttribute('manifest')) installButton.removeAttribute('manifest');
             setTimeout(() => installButton.setAttribute('manifest', manifestUrl), 50);
         }
 
-        // LẮNG NGHE SỰ KIỆN THỰC TẾ TỪ ESP-WEB-TOOLS
+        // LẮNG NGHE SỰ KIỆN THỰC TẾ TỪ ESP-WEB-TOOLS ĐỂ LOG
         installButton.addEventListener('state-changed', (event) => {
             const state = event.detail.state;
             switch (state) {
-                case 'idle':
-                    addLog('[Trạng thái] Sẵn sàng.', 'info');
-                    break;
-                case 'installing':
-                    addLog('[Trạng thái] 🔥 Đang nạp firmware vào ESP32-S3...', 'warning');
-                    break;
-                case 'installed':
-                    addLog('[Trạng thái] ✅ Nạp firmware HOÀN TẤT! Thiết bị sẽ khởi động lại.', 'success');
-                    // Dọn dẹp bộ nhớ cho Object URL sau khi hoàn thành
-                    cleanupObjectUrls();
-                    break;
-                case 'error':
-                    addLog(`[Trạng thái] ❌ Lỗi trong quá trình nạp: ${event.detail.message || 'Không rõ'}`, 'error');
-                    break;
+                case 'idle': addLog('[Trạng thái] Sẵn sàng.', 'info'); break;
+                case 'installing': addLog('[Trạng thái] 🔥 Đang nạp firmware vào ESP32-S3... Vui lòng không ngắt kết nối.', 'warning'); break;
+                case 'installed': addLog('[Trạng thái] ✅ Nạp firmware HOÀN TẤT! Thiết bị sẽ tự động khởi động lại.', 'success'); cleanupObjectUrls(); break;
+                case 'error': addLog(`[Trạng thái] ❌ Lỗi: ${event.detail.message || 'Nguyên nhân không xác định.'}`, 'error'); break;
             }
         });
+        installButton.addEventListener('device-connected', () => addLog('[Thiết bị] 📍 Đã kết nối với ESP32-S3.', 'success'));
+        installButton.addEventListener('manifest-loaded', () => addLog('[Firmware] ✅ Đã xác thực thông tin firmware.', 'info'));
 
-        // Lắng nghe các sự kiện khác để log chi tiết
-        installButton.addEventListener('device-connected', () => addLog('[Thiết bị] Đã kết nối ESP32-S3.', 'success'));
-        installButton.addEventListener('manifest-loaded', () => addLog('[Firmware] Đã xác thực thông tin firmware.', 'info'));
-
-        // Hàm dọn dẹp bộ nhớ
+        // Dọn dẹp bộ nhớ
         function cleanupObjectUrls() {
             if (currentManifestObject) {
                 URL.revokeObjectURL(currentManifestObject.manifestUrl);
-                if (currentManifestObject.fileObjectUrl) {
-                    URL.revokeObjectURL(currentManifestObject.fileObjectUrl);
-                }
+                if (currentManifestObject.fileObjectUrl) URL.revokeObjectURL(currentManifestObject.fileObjectUrl);
                 currentManifestObject = null;
                 addLog('[Hệ thống] Đã dọn dẹp bộ nhớ tạm.', 'info');
             }
         }
 
         // ========== KHỞI TẠO ==========
-        addLog('[Hệ thống] Công cụ nạp ESP32-S3 đã khởi động.', 'info');
-        addLog('[Hướng dẫn] Chọn firmware theo 1 trong 2 cách trên, sau đó bấm "Kết nối...".', 'info');
+        window.onload = function() {
+            addLog('[Hệ thống] Công cụ nạp ESP32-S3 đã khởi động.', 'info');
+            addLog('[Hướng dẫn] Chọn "Nạp từ file trên máy" HOẶC nhấn "Sử dụng firmware mặc định".', 'info');
 
-        // Cấu hình URL mặc định (Ẩn) - Bạn có thể đặt URL mặc định của mình ở đây
-        const DEFAULT_HIDDEN_URL = ''; // Ví dụ: 'https://github.com/username/repo/raw/main/firmware_v1.2.bin'
-        if (DEFAULT_HIDDEN_URL) {
-            document.getElementById('githubUrl').value = DEFAULT_HIDDEN_URL;
-            addLog(`[Hệ thống] Đã nạp URL firmware mặc định (ẩn).`, 'info');
-        }
+            // Tự động kiểm tra và tải thông tin firmware mặc định khi trang mở
+            if (DEFAULT_FIRMWARE_RAW_URL && DEFAULT_FIRMWARE_RAW_URL !== 'YOUR_RAW_FIRMWARE_URL_HERE') {
+                addLog('[Hệ thống] Đang tải thông tin firmware mặc định...', 'info');
+                // Gọi hàm sau 1 giây để trang kịp load
+                setTimeout(loadDefaultFirmware, 1000);
+            } else {
+                addLog('[Cảnh báo] URL firmware mặc định chưa được cấu hình.', 'warning');
+            }
+        };
     </script>
 </body>
 </html>
