@@ -18,6 +18,36 @@
         .section { margin-bottom: 30px; }
         h2 { color: #2c3e50; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 1.2rem; }
         .method-card { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; }
+        
+        /* CSS cho nút cài đặt chính - ĐÃ CẬP NHẬT */
+        #installButton {
+            --esp-tools-button-color: #00c9ff; /* Màu xanh chính */
+            --esp-tools-button-hover-color: #00a8d6; /* Màu khi hover (xanh đậm hơn) */
+            --esp-tools-border-radius: 8px;
+            --esp-tools-font-size: 1rem;
+            --esp-tools-padding: 12px 24px;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        #installButton::part(button) {
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 201, 255, 0.2);
+            border: none;
+            cursor: pointer;
+        }
+        
+        #installButton::part(button):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 201, 255, 0.3);
+        }
+        
+        #installButton::part(button):active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 201, 255, 0.2);
+        }
+        
         .input-group { margin-top: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
         input[type="url"], input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; transition: border-color 0.3s; }
@@ -29,7 +59,6 @@
         .btn-secondary:hover { background-color: #5a6268; }
         .btn-success { background-color: var(--success); color: white; }
         .btn-success:hover { background-color: #218838; }
-        #installButton { --esp-tools-button-color: var(--primary); --esp-tools-border-radius: 8px; width: 100%; margin-top: 15px; }
         .status-log { background-color: #1a1a1a; color: #e0e0e0; padding: 15px; border-radius: 5px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; height: 250px; overflow-y: auto; margin-top: 20px; white-space: pre-wrap; }
         .log-entry { margin-bottom: 5px; line-height: 1.4; }
         .log-time { color: #6c757d; }
@@ -78,27 +107,29 @@
                         <div id="firmwareVersionInfo">Đang kiểm tra...</div>
                     </div>
                     <div class="button-group">
-                        <!-- NÚT QUAN TRỌNG: Sẽ dùng URL được cấu hình sẵn -->
                         <button onclick="loadDefaultFirmware()" class="btn btn-success" id="defaultFirmwareBtn">
                             <i class="fas fa-bolt"></i> Sử dụng firmware mặc định
                         </button>
                     </div>
-                    <p class="url-hint" style="margin-top: 10px;">
-                        <i class="fas fa-shield-alt"></i> <strong>Cơ chế ẩn (Hidden URL):</strong> Link firmware được cấu hình sẵn trong code. Khi bạn upload file <code>firmware.bin</code> mới lên thư mục <code>/firmware</code> của repo, mọi người dùng sẽ tự động nạp được bản mới.
-                    </p>
                 </div>
             </div>
 
-            <!-- Phần 3: BẮT ĐẦU NẠP VÀO THIẾT BỊ -->
+            <!-- Phần 3: BẮT ĐẦU NẠP VÀO THIẾT BỊ - NÚT CHÍNH -->
             <div class="section">
                 <h2><i class="fas fa-play-circle"></i> 3. Bắt đầu nạp vào thiết bị</h2>
                 <div class="method-card">
-                    <p>Sau khi chọn firmware ở trên, nhấn nút bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
+                    <p><strong>Bước cuối cùng:</strong> Sau khi chọn firmware ở trên, nhấn nút <span style="color:#00c9ff;font-weight:bold;">màu xanh</span> bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
+                    
+                    <!-- NÚT CHÍNH VỚI HIỆU ỨNG HOVER -->
                     <esp-web-install-button id="installButton">
                         <span slot="activate"><i class="fas fa-plug"></i> Kết nối ESP32-S3 & Bắt đầu nạp</span>
                         <span slot="unsupported">Trình duyệt không hỗ trợ. Vui lòng dùng Chrome/Edge.</span>
                         <span slot="not-allowed">Đã từ chối truy cập cổng Serial. Hãy thử lại.</span>
                     </esp-web-install-button>
+                    
+                    <p class="url-hint" style="margin-top: 10px;">
+                        <i class="fas fa-mouse-pointer"></i> <strong>Di chuột qua nút để xem hiệu ứng!</strong>
+                    </p>
                 </div>
             </div>
 
@@ -120,8 +151,7 @@
 
     <script>
         // ========== CẤU HÌNH ẨN QUAN TRỌNG ==========
-        // 🔧 THAY ĐỔI URL DƯỚI ĐÂY BẰNG "RAW URL" CỦA BẠN!
-        const DEFAULT_FIRMWARE_RAW_URL = 'https://raw.githubusercontent.com/vnthao/nap/main/firmware/xiaozhi_Thao-merged-binary.bin'; // Ví dụ: 'https://raw.githubusercontent.com/username/esp-flasher-repo/main/firmware/firmware.bin'
+        const DEFAULT_FIRMWARE_RAW_URL = 'https://raw.githubusercontent.com/vnthao/nap/main/firmware/xiaozhi_Thao-merged-binary.bin';
 
         // ========== BIẾN TOÀN CỤC ==========
         let currentManifestObject = null;
@@ -172,7 +202,7 @@
 
             updateInstallButton(manifestUrl);
             currentManifestObject = { manifestUrl, fileObjectUrl };
-            addLog('✅ Firmware đã sẵn sàng. Bấm "Kết nối..." để nạp.', 'info');
+            addLog('✅ Firmware đã sẵn sàng. Bấm nút <span style="color:#00c9ff">"Kết nối ESP32-S3 & Bắt đầu nạp"</span> để tiếp tục.', 'info');
         });
 
         // ========== PHẦN 2: FIRMWARE MẶC ĐỊNH TỪ REPO ==========
@@ -194,14 +224,12 @@
             addLog(`🔍 Đang kiểm tra firmware mặc định tại: ${DEFAULT_FIRMWARE_RAW_URL}`, 'info');
 
             try {
-                // Thử tải header để kiểm tra file có tồn tại không
                 const testResponse = await fetch(DEFAULT_FIRMWARE_RAW_URL, { method: 'HEAD' });
                 if (!testResponse.ok) throw new Error(`HTTP ${testResponse.status}`);
 
                 const fileSize = testResponse.headers.get('content-length');
                 const sizeText = fileSize ? ` (${(fileSize / (1024*1024)).toFixed(2)} MB)` : '';
 
-                // Tạo manifest trỏ TRỰC TIẾP đến URL Raw
                 const manifest = {
                     name: `Firmware chính thức`,
                     version: "1.0",
@@ -217,17 +245,16 @@
                 updateInstallButton(manifestUrl);
                 currentManifestObject = { manifestUrl };
 
-                // Cập nhật giao diện thông tin
                 infoDiv.innerHTML = `
                     <span style="color:var(--success);">
                         <i class="fas fa-check-circle"></i> Phiên bản mới nhất đã sẵn sàng.
                     </span><br>
                     <small>URL: ${new URL(DEFAULT_FIRMWARE_RAW_URL).pathname.split('/').pop()} ${sizeText}</small>
                 `;
-                document.getElementById('localFileName').textContent = ''; // Xóa tên file local nếu có
+                document.getElementById('localFileName').textContent = '';
 
                 addLog(`✅ Đã thiết lập firmware mặc định thành công!`, 'success');
-                addLog('👉 Bấm "Kết nối..." để bắt đầu nạp.', 'info');
+                addLog('👉 Bấm nút <span style="color:#00c9ff">"Kết nối ESP32-S3 & Bắt đầu nạp"</span> để bắt đầu nạp.', 'info');
 
             } catch (error) {
                 addLog(`❌ Không thể tải firmware mặc định: ${error.message}`, 'error');
@@ -239,7 +266,7 @@
             }
         }
 
-        // ========== CẬP NHẬT NÚT CÀI ĐẶT & THEO DÕI LOG THỰC TẾ ==========
+        // ========== CẬP NHẬT NÚT CÀI ĐẶT ==========
         const installButton = document.getElementById('installButton');
 
         function updateInstallButton(manifestUrl) {
@@ -247,7 +274,7 @@
             setTimeout(() => installButton.setAttribute('manifest', manifestUrl), 50);
         }
 
-        // LẮNG NGHE SỰ KIỆN THỰC TẾ TỪ ESP-WEB-TOOLS ĐỂ LOG
+        // ========== LẮNG NGHE SỰ KIỆN THỰC TẾ ==========
         installButton.addEventListener('state-changed', (event) => {
             const state = event.detail.state;
             switch (state) {
@@ -257,10 +284,11 @@
                 case 'error': addLog(`[Trạng thái] ❌ Lỗi: ${event.detail.message || 'Nguyên nhân không xác định.'}`, 'error'); break;
             }
         });
+        
         installButton.addEventListener('device-connected', () => addLog('[Thiết bị] 📍 Đã kết nối với ESP32-S3.', 'success'));
         installButton.addEventListener('manifest-loaded', () => addLog('[Firmware] ✅ Đã xác thực thông tin firmware.', 'info'));
 
-        // Dọn dẹp bộ nhớ
+        // ========== DỌN DẸP BỘ NHỚ ==========
         function cleanupObjectUrls() {
             if (currentManifestObject) {
                 URL.revokeObjectURL(currentManifestObject.manifestUrl);
@@ -275,10 +303,8 @@
             addLog('[Hệ thống] Công cụ nạp ESP32-S3 đã khởi động.', 'info');
             addLog('[Hướng dẫn] Chọn "Nạp từ file trên máy" HOẶC nhấn "Sử dụng firmware mặc định".', 'info');
 
-            // Tự động kiểm tra và tải thông tin firmware mặc định khi trang mở
             if (DEFAULT_FIRMWARE_RAW_URL && DEFAULT_FIRMWARE_RAW_URL !== 'YOUR_RAW_FIRMWARE_URL_HERE') {
                 addLog('[Hệ thống] Đang tải thông tin firmware mặc định...', 'info');
-                // Gọi hàm sau 1 giây để trang kịp load
                 setTimeout(loadDefaultFirmware, 1000);
             } else {
                 addLog('[Cảnh báo] URL firmware mặc định chưa được cấu hình.', 'warning');
