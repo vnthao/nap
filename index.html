@@ -3,404 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32-S3 Web Flasher - Fixed Version</title>
+    <title>Công Cụ Nạp ESP32-S3</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
     <style>
-        /* Giữ nguyên toàn bộ CSS từ phiên bản trước */
+        :root { --primary: #00c9ff; --success: #28a745; --danger: #dc3545; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f5f5f5; color: #333; line-height: 1.6; padding: 20px; min-height: 100vh; }
-        .container { max-width: 1000px; margin: 0 auto; background-color: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        body { background-color: #f8f9fa; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; }
         header { background: linear-gradient(135deg, #2c3e50, #1a2530); color: white; padding: 25px; text-align: center; }
-        .logo { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
-        .logo-icon { font-size: 2.5rem; color: #00c9ff; }
-        h1 { font-size: 2rem; margin-bottom: 8px; }
-        .subtitle { font-size: 0.95rem; opacity: 0.9; margin-bottom: 15px; }
-        .browser-warning { background-color: rgba(255, 193, 7, 0.2); border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin: 15px auto; font-size: 0.85rem; max-width: 800px; display: none; }
+        h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        .subtitle { font-size: 0.9rem; opacity: 0.9; }
         .main-content { padding: 25px; }
         .section { margin-bottom: 30px; }
-        h2 { color: #2c3e50; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 1.3rem; }
-        h2 i { color: #00c9ff; }
-        .flash-container { text-align: center; padding: 25px; background-color: #f9f9f9; border-radius: 8px; margin-bottom: 20px; border: 2px dashed #ddd; }
-        #installButton { --esp-tools-button-color: #00c9ff; --esp-tools-text-color: white; --esp-tools-border-radius: 8px; --esp-tools-font-size: 1rem; --esp-tools-padding: 15px 30px; margin: 10px 0; }
-        .chip-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; display: none; }
-        .chip-detail { background-color: #f0f8ff; padding: 12px; border-radius: 5px; border-left: 3px solid #00c9ff; }
-        .chip-detail h4 { color: #2c3e50; margin-bottom: 5px; font-size: 0.85rem; text-transform: uppercase; }
-        .chip-detail p { font-weight: 600; font-size: 1rem; }
-        .instructions { background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-top: 25px; }
-        .instructions ol { margin-left: 20px; margin-bottom: 15px; }
-        .instructions li { margin-bottom: 10px; line-height: 1.5; }
-        .step-number { display: inline-block; background-color: #00c9ff; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; margin-right: 8px; font-weight: bold; font-size: 0.9rem; }
-        .warning-box { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 15px; border-radius: 0 5px 5px 0; }
-        .warning-box h4 { color: #856404; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; }
-        .warning-box p { font-size: 0.85rem; margin-bottom: 5px; }
-        .firmware-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
-        .firmware-option { background-color: #f8f9fa; border-radius: 8px; padding: 18px; text-align: center; border: 2px solid #e9ecef; transition: all 0.3s; cursor: pointer; }
-        .firmware-option:hover { border-color: #00c9ff; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0, 201, 255, 0.1); }
-        .firmware-option i { font-size: 2.2rem; color: #00c9ff; margin-bottom: 12px; }
-        .firmware-option h3 { margin-bottom: 8px; color: #2c3e50; font-size: 1.1rem; }
-        .firmware-option p { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
-        .btn { background-color: #00c9ff; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; transition: background-color 0.3s; }
-        .btn:hover { background-color: #00a8d6; }
-        .custom-file-upload { display: inline-block; background-color: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: background-color 0.3s; }
-        .custom-file-upload:hover { background-color: #218838; }
-        .selected-file { margin-left: 15px; font-weight: bold; color: #2c3e50; font-size: 0.9rem; }
-        .status-log { background-color: #1e1e1e; color: #f0f0f0; padding: 15px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.85rem; height: 180px; overflow-y: auto; margin-top: 15px; white-space: pre-wrap; }
-        .log-entry { margin-bottom: 4px; }
+        h2 { color: #2c3e50; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; font-size: 1.2rem; }
+        .method-card { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #dee2e6; }
+        .input-group { margin-top: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #495057; }
+        input[type="url"], input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; transition: border-color 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; }
+        .btn { display: inline-block; padding: 10px 20px; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: #00a8d6; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        #installButton { --esp-tools-button-color: var(--primary); --esp-tools-border-radius: 8px; width: 100%; margin-top: 15px; }
+        .status-log { background-color: #1a1a1a; color: #e0e0e0; padding: 15px; border-radius: 5px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; height: 250px; overflow-y: auto; margin-top: 20px; white-space: pre-wrap; }
+        .log-entry { margin-bottom: 5px; line-height: 1.4; }
         .log-time { color: #6c757d; }
         .log-info { color: #17a2b8; }
-        .log-success { color: #28a745; }
-        .log-error { color: #dc3545; }
+        .log-success { color: var(--success); }
+        .log-error { color: var(--danger); }
         .log-warning { color: #ffc107; }
-        footer { text-align: center; padding: 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; color: #666; font-size: 0.85rem; }
-        .compatibility { display: flex; justify-content: center; gap: 15px; margin-top: 12px; flex-wrap: wrap; }
-        .compatibility-item { display: flex; align-items: center; gap: 6px; }
-        .compatibility-item i { color: #28a745; }
-        @media (max-width: 768px) { .container { border-radius: 0; } header { padding: 20px 15px; } h1 { font-size: 1.6rem; } .main-content { padding: 20px 15px; } .firmware-options, .chip-details { grid-template-columns: 1fr; } }
+        footer { text-align: center; padding: 20px; color: #6c757d; font-size: 0.85rem; border-top: 1px solid #eee; }
+        .hidden { display: none; }
+        .url-hint { font-size: 0.8rem; color: #6c757d; margin-top: 5px; }
+        #githubUrl { font-family: monospace; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <div class="logo-icon"><i class="fas fa-microchip"></i></div>
-                <div>
-                    <h1>ESP32-S3 Web Flasher</h1>
-                    <p class="subtitle">Nạp firmware cho ESP32-S3 trực tiếp từ trình duyệt Web - Phiên bản đã sửa lỗi</p>
-                </div>
-            </div>
-            <div class="browser-warning" id="browserWarning">
-                <i class="fas fa-exclamation-triangle"></i> Trình duyệt của bạn không hỗ trợ Web Serial API. Vui lòng sử dụng Chrome/Edge 89+ hoặc Opera 76+.
-            </div>
+            <h1><i class="fas fa-microchip"></i> Công Cụ Nạp ESP32-S3</h1>
+            <p class="subtitle">Nạp firmware trực tiếp từ trình duyệt hoặc từ liên kết trực tuyến</p>
         </header>
-        
         <div class="main-content">
+            <!-- Phần 1: NẠP TỪ FILE TRÊN MÁY -->
             <div class="section">
-                <h2><i class="fas fa-bolt"></i> Nạp Firmware ESP32-S3</h2>
-                <div class="flash-container">
-                    <!-- Nút cài đặt KHÔNG có manifest mặc định -->
-                    <esp-web-install-button id="installButton">
-                        <span slot="activate">Kết nối và nạp firmware</span>
-                        <span slot="unsupported">Trình duyệt không hỗ trợ Web Serial. Vui lòng dùng Chrome/Edge.</span>
-                        <span slot="not-allowed">Vui lòng cho phép truy cập cổng Serial.</span>
-                    </esp-web-install-button>
-                    
-                    <div class="chip-details" id="chipDetails">
-                        <div class="chip-detail"><h4>Chip</h4><p id="chipType">Chưa kết nối</p></div>
-                        <div class="chip-detail"><h4>MAC Address</h4><p id="macAddress">-</p></div>
-                        <div class="chip-detail"><h4>Flash Size</h4><p id="flashSize">-</p></div>
-                        <div class="chip-detail"><h4>Trạng thái</h4><p id="chipStatus">Chờ kết nối</p></div>
-                    </div>
-                </div>
-                
-                <div class="instructions">
-                    <h3><i class="fas fa-list-ol"></i> Hướng dẫn nạp firmware (CÁCH MỚI)</h3>
-                    <ol>
-                        <li><span class="step-number">1</span> Chọn một trong 3 firmware mẫu bên dưới HOẶC tải lên file .bin của bạn.</li>
-                        <li><span class="step-number">2</span> Nhấn nút <strong>"Kết nối và nạp firmware"</strong> ở trên.</li>
-                        <li><span class="step-number">3</span> Chọn cổng Serial khi trình duyệt hỏi.</li>
-                        <li><span class="step-number">4</span> Quá trình nạp sẽ tự động bắt đầu.</li>
-                    </ol>
-                    
-                    <div class="warning-box">
-                        <h4><i class="fas fa-exclamation-triangle"></i> Lưu ý quan trọng</h4>
-                        <p>• <strong>KHÔNG cần chọn file .bin lần thứ hai</strong> sau khi đã chọn firmware ở bước 1.</p>
-                        <p>• Nếu dùng file của bạn, hãy đảm bảo đó là file .bin hợp lệ cho ESP32-S3.</p>
-                        <p>• Chỉ hoạt động trên Chrome/Edge/Opera phiên bản mới.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2><i class="fas fa-download"></i> Bước 1: Chọn Firmware</h2>
-                <p>Chọn firmware mẫu hoặc tải lên file của bạn:</p>
-                
-                <div class="firmware-options">
-                    <div class="firmware-option" onclick="selectSampleFirmware('blink')">
-                        <i class="fas fa-lightbulb"></i>
-                        <h3>LED Blink (Mẫu)</h3>
-                        <p>Firmware nhấp nháy LED cơ bản</p>
-                        <button class="btn">Chọn cái này</button>
-                    </div>
-                    
-                    <div class="firmware-option" onclick="selectSampleFirmware('webserver')">
-                        <i class="fas fa-server"></i>
-                        <h3>Web Server (Mẫu)</h3>
-                        <p>ESP32-S3 làm web server đơn giản</p>
-                        <button class="btn">Chọn cái này</button>
-                    </div>
-                    
-                    <div class="firmware-option" onclick="selectSampleFirmware('wifi')">
-                        <i class="fas fa-wifi"></i>
-                        <h3>Wi-Fi Scanner (Mẫu)</h3>
-                        <p>Quét các mạng Wi-Fi xung quanh</p>
-                        <button class="btn">Chọn cái này</button>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
-                    <h3><i class="fas fa-upload"></i> Hoặc dùng firmware của bạn</h3>
-                    <p>Tải lên file firmware .bin từ máy tính của bạn:</p>
-                    <div style="margin-top: 15px;">
-                        <input type="file" id="firmwareFile" accept=".bin" style="display: none;">
-                        <button onclick="document.getElementById('firmwareFile').click()" class="custom-file-upload">
-                            <i class="fas fa-upload"></i> Chọn file firmware .bin của bạn
+                <h2><i class="fas fa-upload"></i> 1. Nạp từ file trên máy</h2>
+                <div class="method-card">
+                    <p>Chọn file firmware <code>.bin</code> từ máy tính của bạn.</p>
+                    <div class="input-group">
+                        <input type="file" id="localFile" accept=".bin" style="display: none;">
+                        <button onclick="document.getElementById('localFile').click()" class="btn btn-secondary">
+                            <i class="fas fa-folder-open"></i> Chọn file .bin
                         </button>
-                        <span id="selectedFile" class="selected-file"></span>
+                        <span id="localFileName" style="margin-left: 15px; font-weight:500;"></span>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Phần 2: NẠP TỪ LINK GITHUB (TÍNH NĂNG MỚI) -->
             <div class="section">
-                <h2><i class="fas fa-terminal"></i> Nhật ký & Thông báo lỗi</h2>
-                <div class="status-log" id="statusLog">
-                    <div class="log-entry">
-                        <span class="log-time">[10:30:15]</span>
-                        <span class="log-info">ESP32-S3 Web Flasher (Phiên bản đã sửa lỗi URL) đã sẵn sàng</span>
+                <h2><i class="fab fa-github"></i> 2. Nạp từ liên kết GitHub (Online)</h2>
+                <div class="method-card">
+                    <p>Dán URL trực tiếp đến file <code>.bin</code> trên GitHub (hoặc bất kỳ máy chủ nào).</p>
+                    <div class="input-group">
+                        <label for="githubUrl">URL file firmware:</label>
+                        <input type="url" id="githubUrl" placeholder="https://github.com/user/repo/raw/main/firmware.bin">
+                        <p class="url-hint">📝 <strong>Mẹo:</strong> Trên GitHub, nhấn vào file .bin, chọn "Raw", sau đó sao chép URL từ thanh địa chỉ.</p>
                     </div>
-                    <div id="logContent"></div>
-                </div>
-                <div style="margin-top: 10px; text-align: center;">
-                    <button onclick="clearLog()" class="btn" style="background-color: #6c757d;">
-                        <i class="fas fa-trash-alt"></i> Xóa nhật ký
+                    <button onclick="loadFromGitHub()" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Tải & Thiết lập firmware từ URL này
                     </button>
                 </div>
             </div>
-        </div>
-        
-        <footer>
-            <p>ESP32-S3 Web Flasher | Sử dụng ESP Web Tools từ Espressif Systems</p>
-            <p>Phiên bản sửa lỗi "Invalid URL" - Nguyên tắc: Tạo URL an toàn, kiểm tra dữ liệu trước khi dùng</p>
-            <div class="compatibility">
-                <div class="compatibility-item"><i class="fab fa-chrome"></i><span>Chrome 89+</span></div>
-                <div class="compatibility-item"><i class="fab fa-edge"></i><span>Edge 89+</span></div>
-                <div class="compatibility-item"><i class="fab fa-opera"></i><span>Opera 76+</span></div>
+
+            <!-- Phần 3: NÚT BẮT ĐẦU NẠP -->
+            <div class="section">
+                <h2><i class="fas fa-play-circle"></i> 3. Bắt đầu nạp vào thiết bị</h2>
+                <div class="method-card">
+                    <p>Sau khi chọn firmware ở trên, nhấn nút bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
+                    <!-- Nút chính của esp-web-tools -->
+                    <esp-web-install-button id="installButton">
+                        <span slot="activate"><i class="fas fa-plug"></i> Kết nối ESP32-S3 & Bắt đầu nạp</span>
+                        <span slot="unsupported">Trình duyệt không hỗ trợ. Vui lòng dùng Chrome/Edge.</span>
+                        <span slot="not-allowed">Đã từ chối truy cập cổng Serial. Hãy thử lại.</span>
+                    </esp-web-install-button>
+                </div>
             </div>
+
+            <!-- Phần 4: LOG HỆ THỐNG -->
+            <div class="section">
+                <h2><i class="fas fa-terminal"></i> Nhật ký hệ thống</h2>
+                <div class="status-log" id="statusLog">
+                    <!-- Log sẽ được thêm vào đây bởi JavaScript -->
+                    <div class="log-entry log-info">[Hệ thống] Công cụ đã sẵn sàng. Chọn firmware và bắt đầu.</div>
+                </div>
+                <div style="text-align: right; margin-top:10px;">
+                    <button onclick="clearLog()" class="btn btn-secondary btn-sm"><i class="fas fa-trash"></i> Xóa log</button>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>ESP Web Flasher | Dựa trên ESP Web Tools của Espressif | Phiên bản: Chuyên dụng</p>
         </footer>
     </div>
 
     <script>
-        // ========== BIẾN TOÀN CỤC ==========
-        let currentManifestUrl = null;
-        let selectedFirmwareFile = null;
-        
-        // ========== HÀM HIỂN THỊ LOG ==========
+        // ========== BIẾN TOÀN CỤC & HÀM LOG ==========
+        let currentManifestObject = null;
+
         function addLog(message, type = 'info') {
-            const logContent = document.getElementById('logContent');
-            const time = new Date().toLocaleTimeString();
+            const logContainer = document.getElementById('statusLog');
+            const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry';
-            
-            let typeClass = 'log-info';
-            if (type === 'success') typeClass = 'log-success';
-            if (type === 'error') typeClass = 'log-error';
-            if (type === 'warning') typeClass = 'log-warning';
-            
-            logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClass}">${message}</span>`;
-            logContent.appendChild(logEntry);
-            document.getElementById('statusLog').scrollTop = document.getElementById('statusLog').scrollHeight;
+
+            // Map loại log sang class CSS
+            const typeClassMap = { 'info': 'log-info', 'success': 'log-success', 'error': 'log-error', 'warning': 'log-warning' };
+            logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClassMap[type] || 'log-info'}">${message}</span>`;
+            logContainer.appendChild(logEntry);
+            // Tự động cuộn xuống dòng mới nhất
+            logContainer.scrollTop = logContainer.scrollHeight;
+            // In ra console để debug
             console.log(`[${type.toUpperCase()}] ${message}`);
         }
-        
+
         function clearLog() {
-            document.getElementById('logContent').innerHTML = '';
-            addLog('Đã xóa nhật ký');
+            document.getElementById('statusLog').innerHTML = '';
+            addLog('Đã xóa nhật ký.', 'info');
         }
-        
-        // ========== HÀM KIỂM TRA TRÌNH DUYỆT ==========
-        function checkBrowserSupport() {
-            if (!('serial' in navigator)) {
-                document.getElementById('browserWarning').style.display = 'block';
-                addLog('Trình duyệt không hỗ trợ Web Serial API', 'error');
-                return false;
-            }
-            addLog('Trình duyệt hỗ trợ Web Serial API', 'success');
-            return true;
-        }
-        
-        // ========== HÀM TẠO MANIFEST TỪ FILE ==========
-        // HÀM QUAN TRỌNG: Tạo manifest an toàn, kiểm tra file trước khi tạo URL
-        function createManifestFromFile(file) {
-            if (!file || !(file instanceof File)) {
-                addLog('LỖI: File không hợp lệ', 'error');
-                return null;
-            }
-            
-            addLog(`Đang tạo manifest cho file: ${file.name}`, 'info');
-            
-            // Tạo object URL cho file firmware AN TOÀN
-            const firmwareUrl = URL.createObjectURL(file);
-            addLog(`Đã tạo URL an toàn cho file firmware`, 'success');
-            
-            // Tạo manifest object
-            const manifest = {
-                name: file.name.replace('.bin', '') || 'Firmware ESP32-S3',
-                version: "1.0.0",
-                builds: [
-                    {
-                        chipFamily: "ESP32-S3",
-                        parts: [
-                            { path: firmwareUrl, offset: 0x00000 } // Sử dụng object URL trực tiếp
-                        ]
-                    }
-                ]
-            };
-            
-            // Chuyển manifest thành blob và tạo URL
-            const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { 
-                type: 'application/json' 
-            });
-            
-            const manifestUrl = URL.createObjectURL(manifestBlob);
-            addLog('Đã tạo manifest thành công', 'success');
-            
-            return { manifestUrl, firmwareUrl };
-        }
-        
-        // ========== HÀM CHỌN FIRMWARE MẪU ==========
-        function selectSampleFirmware(type) {
-            let manifestUrl, description;
-            
-            // Sử dụng các manifest mẫu ĐƠN GIẢN từ CDN
-            const baseUrl = 'https://raw.githubusercontent.com/espressif/esp-web-tools/main/examples';
-            
-            switch(type) {
-                case 'blink':
-                    manifestUrl = `${baseUrl}/esp32-blink/manifest.json`;
-                    description = 'Firmware Blink LED mẫu';
-                    break;
-                case 'webserver':
-                    // Dùng blink thay thế vì webserver có thể không tồn tại
-                    manifestUrl = `${baseUrl}/esp32-blink/manifest.json`;
-                    description = 'Firmware Web Server mẫu (dùng blink thay thế)';
-                    break;
-                case 'wifi':
-                    manifestUrl = `${baseUrl}/esp32-blink/manifest.json`;
-                    description = 'Firmware Wi-Fi Scanner mẫu (dùng blink thay thế)';
-                    break;
-                default:
-                    addLog('Lỗi: Loại firmware không hợp lệ', 'error');
-                    return;
-            }
-            
-            // Giải phóng URL cũ nếu có
-            if (currentManifestUrl) {
-                URL.revokeObjectURL(currentManifestUrl);
-            }
-            
-            currentManifestUrl = manifestUrl;
-            selectedFirmwareFile = null;
-            
-            // Cập nhật nút cài đặt
-            const installButton = document.getElementById('installButton');
-            installButton.setAttribute('manifest', manifestUrl);
-            
-            document.getElementById('selectedFile').textContent = `Đã chọn: ${description}`;
-            document.getElementById('selectedFile').style.color = '#00c9ff';
-            
-            addLog(`Đã chọn ${description}`, 'success');
-            addLog('Nhấn "Kết nối và nạp firmware" để bắt đầu', 'info');
-        }
-        
-        // ========== XỬ LÝ KHI NGƯỜI DÙNG CHỌN FILE ==========
-        document.getElementById('firmwareFile').addEventListener('change', function(e) {
-            if (e.target.files.length === 0) return;
-            
+
+        // ========== PHẦN 1: XỬ LÝ FILE LOCAL ==========
+        document.getElementById('localFile').addEventListener('change', function(e) {
+            if (!e.target.files.length) return;
             const file = e.target.files[0];
+            const fileNameEl = document.getElementById('localFileName');
+
             if (!file.name.toLowerCase().endsWith('.bin')) {
-                addLog('LỖI: Vui lòng chọn file có đuôi .bin', 'error');
+                addLog(`Lỗi: File "${file.name}" không phải là file .bin hợp lệ.`, 'error');
+                fileNameEl.textContent = 'File không hợp lệ!';
+                fileNameEl.style.color = 'var(--danger)';
                 return;
             }
-            
-            document.getElementById('selectedFile').textContent = `Đã chọn: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-            document.getElementById('selectedFile').style.color = '#28a745';
-            
-            addLog(`Đã chọn file: ${file.name}`, 'success');
-            
-            // Tạo manifest từ file
-            const urls = createManifestFromFile(file);
-            if (!urls) {
-                addLog('Không thể tạo manifest từ file', 'error');
-                return;
-            }
-            
-            // Giải phóng URL cũ nếu có
-            if (currentManifestUrl) {
-                URL.revokeObjectURL(currentManifestUrl);
-            }
-            
-            currentManifestUrl = urls.manifestUrl;
-            selectedFirmwareFile = file;
-            
+
+            fileNameEl.textContent = `📄 ${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+            fileNameEl.style.color = 'var(--success)';
+            addLog(`Đã chọn file local: "${file.name}"`, 'success');
+
+            // Tạo Object URL cho file (an toàn với trình duyệt)
+            const fileObjectUrl = URL.createObjectURL(file);
+            // Tạo manifest JSON cho file này
+            const manifest = {
+                name: `Local: ${file.name}`,
+                version: "1.0.0",
+                builds: [{ chipFamily: "ESP32-S3", parts: [{ path: fileObjectUrl, offset: 0x00000 }] }]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+
             // Cập nhật nút cài đặt
-            const installButton = document.getElementById('installButton');
-            installButton.setAttribute('manifest', urls.manifestUrl);
-            
-            addLog('Firmware đã sẵn sàng. Nhấn "Kết nối và nạp firmware" để bắt đầu nạp.', 'info');
+            updateInstallButton(manifestUrl);
+            // Lưu đối tượng để dọn dẹp sau
+            currentManifestObject = { manifestUrl, fileObjectUrl };
+            addLog('Firmware đã sẵn sàng. Bấm "Kết nối..." để nạp.', 'info');
         });
-        
-        // ========== THEO DÕI SỰ KIỆN ESP-WEB-INSTALL-BUTTON ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            // Kiểm tra trình duyệt
-            checkBrowserSupport();
-            
-            // Lấy tham chiếu đến các phần tử
-            const installButton = document.getElementById('installButton');
-            const chipDetails = document.getElementById('chipDetails');
-            
-            // Lắng nghe sự kiện thay đổi trạng thái
-            installButton.addEventListener('state-changed', function(event) {
-                const state = event.detail.state;
-                const statusElement = document.getElementById('chipStatus');
-                
-                switch(state) {
-                    case 'idle':
-                        addLog('Sẵn sàng kết nối', 'info');
-                        chipDetails.style.display = 'none';
-                        break;
-                    case 'installing':
-                        addLog('Đang nạp firmware...', 'info');
-                        chipDetails.style.display = 'grid';
-                        statusElement.textContent = 'Đang nạp...';
-                        statusElement.style.color = '#ffc107';
-                        break;
-                    case 'installed':
-                        addLog('✅ Nạp firmware thành công!', 'success');
-                        statusElement.textContent = 'Hoàn thành';
-                        statusElement.style.color = '#28a745';
-                        
-                        // GIẢI PHÓNG BỘ NHỚ: Xóa các URL đã tạo
-                        if (currentManifestUrl) {
-                            URL.revokeObjectURL(currentManifestUrl);
-                            currentManifestUrl = null;
-                        }
-                        break;
-                    case 'error':
-                        addLog('❌ Lỗi khi nạp firmware', 'error');
-                        statusElement.textContent = 'Lỗi';
-                        statusElement.style.color = '#dc3545';
-                        break;
+
+        // ========== PHẦN 2: XỬ LÝ URL GITHUB (TÍNH NĂNG CHÍNH) ==========
+        async function loadFromGitHub() {
+            const urlInput = document.getElementById('githubUrl').value.trim();
+            const fileNameEl = document.getElementById('localFileName');
+
+            if (!urlInput) {
+                addLog('Lỗi: Vui lòng nhập URL file firmware.', 'error');
+                alert('Vui lòng dán URL file .bin vào ô bên trên.');
+                return;
+            }
+
+            // Kiểm tra URL hợp lệ cơ bản
+            try {
+                new URL(urlInput);
+            } catch {
+                addLog(`Lỗi: URL không hợp lệ: "${urlInput}"`, 'error');
+                alert('URL không đúng định dạng. Vui lòng kiểm tra lại.');
+                return;
+            }
+
+            addLog(`Đang tải firmware từ: ${urlInput}`, 'info');
+            fileNameEl.textContent = `⏳ Đang tải từ URL...`;
+            fileNameEl.style.color = 'orange';
+
+            try {
+                // Thử tải file để kiểm tra
+                const testResponse = await fetch(urlInput, { method: 'HEAD' });
+                if (!testResponse.ok) {
+                    throw new Error(`Không thể truy cập file (HTTP ${testResponse.status}). Kiểm tra lại URL hoặc quyền truy cập.`);
                 }
-            });
-            
-            // Hiển thị thông tin khi kết nối thiết bị
-            installButton.addEventListener('device-connected', function(event) {
-                addLog('📱 Đã kết nối với ESP32-S3', 'success');
-                document.getElementById('chipStatus').textContent = 'Đã kết nối';
-                document.getElementById('chipStatus').style.color = '#28a745';
-            });
-            
-            // Log khi manifest được tải
-            installButton.addEventListener('manifest-loaded', function(event) {
-                addLog('📄 Đã tải thông tin firmware thành công', 'success');
-            });
+
+                // Tạo manifest trỏ TRỰC TIẾP đến URL từ GitHub
+                const manifest = {
+                    name: `Online Firmware`,
+                    version: "1.0.0",
+                    builds: [{
+                        chipFamily: "ESP32-S3",
+                        parts: [{ path: urlInput, offset: 0x00000 }] // Đường dẫn trực tiếp
+                    }]
+                };
+
+                // Tạo manifest dưới dạng Blob URL
+                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                const manifestUrl = URL.createObjectURL(manifestBlob);
+
+                // Cập nhật nút cài đặt
+                updateInstallButton(manifestUrl);
+                // Lưu đối tượng để dọn dẹp
+                currentManifestObject = { manifestUrl };
+
+                fileNameEl.textContent = `🌐 Firmware Online [Đã sẵn sàng]`;
+                fileNameEl.style.color = 'var(--success)';
+                addLog(`✅ Đã thiết lập firmware từ URL thành công!`, 'success');
+                addLog('Bấm "Kết nối..." để bắt đầu nạp. File sẽ được tải trực tiếp từ liên kết.', 'info');
+
+            } catch (error) {
+                addLog(`❌ Lỗi khi tải từ URL: ${error.message}`, 'error');
+                fileNameEl.textContent = '❌ Tải thất bại!';
+                fileNameEl.style.color = 'var(--danger)';
+                alert(`Không thể tải file từ URL:\n${error.message}\n\nHãy kiểm tra:\n1. URL có đúng không?\n2. File có công khai không? (GitHub: dùng Raw URL)\n3. Có vấn đề mạng không?`);
+            }
+        }
+
+        // ========== HÀM CẬP NHẬT NÚT CÀI ĐẶT & THEO DÕI TRẠNG THÁI ==========
+        const installButton = document.getElementById('installButton');
+
+        function updateInstallButton(manifestUrl) {
+            // Xóa manifest cũ và thiết lập cái mới
+            if (installButton.hasAttribute('manifest')) {
+                installButton.removeAttribute('manifest');
+            }
+            // Dùng setTimeout nhỏ để đảm bảo DOM cập nhật
+            setTimeout(() => installButton.setAttribute('manifest', manifestUrl), 50);
+        }
+
+        // LẮNG NGHE SỰ KIỆN THỰC TẾ TỪ ESP-WEB-TOOLS
+        installButton.addEventListener('state-changed', (event) => {
+            const state = event.detail.state;
+            switch (state) {
+                case 'idle':
+                    addLog('[Trạng thái] Sẵn sàng.', 'info');
+                    break;
+                case 'installing':
+                    addLog('[Trạng thái] 🔥 Đang nạp firmware vào ESP32-S3...', 'warning');
+                    break;
+                case 'installed':
+                    addLog('[Trạng thái] ✅ Nạp firmware HOÀN TẤT! Thiết bị sẽ khởi động lại.', 'success');
+                    // Dọn dẹp bộ nhớ cho Object URL sau khi hoàn thành
+                    cleanupObjectUrls();
+                    break;
+                case 'error':
+                    addLog(`[Trạng thái] ❌ Lỗi trong quá trình nạp: ${event.detail.message || 'Không rõ'}`, 'error');
+                    break;
+            }
         });
-        
-        // ========== KHỞI TẠO BAN ĐẦU ==========
-        setTimeout(() => {
-            addLog('Trang web đã sẵn sàng. Vui lòng chọn firmware ở Bước 1.', 'success');
-            addLog('Phiên bản này đã sửa lỗi "Invalid URL"', 'info');
-        }, 500);
+
+        // Lắng nghe các sự kiện khác để log chi tiết
+        installButton.addEventListener('device-connected', () => addLog('[Thiết bị] Đã kết nối ESP32-S3.', 'success'));
+        installButton.addEventListener('manifest-loaded', () => addLog('[Firmware] Đã xác thực thông tin firmware.', 'info'));
+
+        // Hàm dọn dẹp bộ nhớ
+        function cleanupObjectUrls() {
+            if (currentManifestObject) {
+                URL.revokeObjectURL(currentManifestObject.manifestUrl);
+                if (currentManifestObject.fileObjectUrl) {
+                    URL.revokeObjectURL(currentManifestObject.fileObjectUrl);
+                }
+                currentManifestObject = null;
+                addLog('[Hệ thống] Đã dọn dẹp bộ nhớ tạm.', 'info');
+            }
+        }
+
+        // ========== KHỞI TẠO ==========
+        addLog('[Hệ thống] Công cụ nạp ESP32-S3 đã khởi động.', 'info');
+        addLog('[Hướng dẫn] Chọn firmware theo 1 trong 2 cách trên, sau đó bấm "Kết nối...".', 'info');
+
+        // Cấu hình URL mặc định (Ẩn) - Bạn có thể đặt URL mặc định của mình ở đây
+        const DEFAULT_HIDDEN_URL = ''; // Ví dụ: 'https://github.com/username/repo/raw/main/firmware_v1.2.bin'
+        if (DEFAULT_HIDDEN_URL) {
+            document.getElementById('githubUrl').value = DEFAULT_HIDDEN_URL;
+            addLog(`[Hệ thống] Đã nạp URL firmware mặc định (ẩn).`, 'info');
+        }
     </script>
 </body>
 </html>
