@@ -161,7 +161,7 @@
                     </div>
                     
                     <div class="url-hint" style="margin-top: 15px;">
-                        <i class="fas fa-info-circle"></i> <strong>Chú ý:</strong> Bạn cần cập nhật URL cho từng firmware trong phần JavaScript (tìm biến FIRMWARE_LIST).
+                        <i class="fas fa-info-circle"></i> <strong>Chú ý:</strong> chọn đúng phiên bản cần nạp. nếu nạp sai hãy đợi nạp song và nạp lại (tìm biến FIRMWARE_LIST).
                     </div>
                 </div>
             </div>
@@ -170,17 +170,17 @@
             <div class="section">
                 <h2><i class="fas fa-play-circle"></i> 3. Bắt đầu nạp vào thiết bị</h2>
                 <div class="method-card">
-                    <p><strong>Bước cuối cùng:</strong> Sau khi chọn firmware ở trên, nhấn nút <span style="color:#00c9ff;font-weight:bold;">màu xanh</span> bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
+                    <p><strong>Bước cuối cùng:</strong> Sau khi chọn firmware ở trên, nhấn nút <i class="fas fa-plug"></i>">chọn cổng COM </span> bên dưới để kết nối với ESP32-S3 và bắt đầu quá trình nạp.</p>
                     
                     <!-- NÚT CHÍNH VỚI HIỆU ỨNG HOVER -->
                     <esp-web-install-button id="installButton">
-                        <span slot="activate"><i class="fas fa-plug"></i> Kết nối ESP32-S3 & Bắt đầu nạp</span>
+                        <span slot="activate"><i class="fas fa-plug"></i> Bấm Kết nối ESP32-S3 & Bắt đầu nạp</span>
                         <span slot="unsupported">Trình duyệt không hỗ trợ. Vui lòng dùng Chrome/Edge.</span>
                         <span slot="not-allowed">Đã từ chối truy cập cổng Serial. Hãy thử lại.</span>
                     </esp-web-install-button>
                     
                     <p class="url-hint" style="margin-top: 10px;">
-                        <i class="fas fa-mouse-pointer"></i> <strong>Di chuột qua nút để xem hiệu ứng!</strong>
+                        <i class="fas fa-mouse-pointer"></i> <strong>Di chuột vào hình kết nối và bấm để chọn cổng COM</strong>
                     </p>
                 </div>
             </div>
