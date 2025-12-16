@@ -2,4 +2,4 @@
 
 Công cụ nạp firmware ESP32-S3 qua trình duyệt web.
 
-Truy cập: https://username.github.io/repository-name/
+Truy cập: https://vnthao.github.io/nap/index.html
